@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+  <!-- macOS menu bar template image: black + alpha only; the system tints it. -->
+  <defs>
+    <mask id="back">
+      <rect width="44" height="44" fill="#fff"/>
+      <!-- gap around the front bubble so the two shapes read separately -->
+      <path d="M22 18 H37 a5 5 0 0 1 5 5 V33 a5 5 0 0 1 -4 5 L39 43 L33 38 H22 a5 5 0 0 1 -5 -5 V23 a5 5 0 0 1 5 -5 Z" fill="#000" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+      <text x="12.5" y="11" font-family="SF Pro Rounded" font-weight="900" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#000">A</text>
+    </mask>
+    <mask id="front">
+      <rect width="44" height="44" fill="#fff"/>
+      <text x="29.5" y="28" font-family="Apple SD Gothic Neo" font-weight="900" font-size="15" text-anchor="middle" dominant-baseline="central" fill="#000">가</text>
+    </mask>
+  </defs>
+  <path mask="url(#back)" d="M7 2 H21 a5 5 0 0 1 5 5 V18 a5 5 0 0 1 -5 5 H11 L5 28 L6 22.5 a5 5 0 0 1 -4 -4.5 V7 a5 5 0 0 1 5 -5 Z" fill="#000"/>
+  <path mask="url(#front)" d="M22 18 H37 a5 5 0 0 1 5 5 V33 a5 5 0 0 1 -4 5 L39 43 L33 38 H22 a5 5 0 0 1 -5 -5 V23 a5 5 0 0 1 5 -5 Z" fill="#000"/>
+</svg>

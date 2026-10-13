@@ -1,4 +1,8 @@
-# langlang
+<p align="center">
+  <img src="assets/icon.png" width="128" height="128" alt="langlang icon">
+</p>
+
+<h1 align="center">langlang</h1>
 
 A tiny popup translator for macOS, Windows, and Linux. Press a global shortcut, paste, and get a translation:
 

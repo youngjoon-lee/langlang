@@ -4,7 +4,8 @@
   --border: rgba(0, 0, 0, 0.08);
   --text: #16181d;
   --muted: #6b7280;
-  --accent: #d97757;
+  /* Matches the app icon. */
+  --accent: #2f6beb;
   --accent-text: #ffffff;
   --error: #c2410c;
   --radius: 14px;
@@ -22,6 +23,7 @@
     --border: rgba(255, 255, 255, 0.08);
     --text: #ececef;
     --muted: #9095a0;
+    --accent: #4c8dff;
     --error: #fb923c;
   }
 }

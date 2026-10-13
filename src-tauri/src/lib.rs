@@ -1,5 +1,7 @@
 use std::sync::Mutex;
 
+#[cfg(target_os = "macos")]
+use tauri::image::Image;
 use tauri::{
     AppHandle, Emitter, Manager, WebviewWindow, WindowEvent,
     menu::{Menu, MenuItem},
@@ -108,9 +110,16 @@ pub fn run() {
             let quit = MenuItem::with_id(app, "quit", "Quit langlang", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &settings, &quit])?;
 
-            TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("langlang")
+            // macOS menu bar icons should be monochrome "template" images that the
+            // system tints for light/dark menu bars; elsewhere use the color app icon.
+            #[cfg(target_os = "macos")]
+            let tray = TrayIconBuilder::new()
+                .icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+                .icon_as_template(true);
+            #[cfg(not(target_os = "macos"))]
+            let tray = TrayIconBuilder::new().icon(app.default_window_icon().unwrap().clone());
+
+            tray.tooltip("langlang")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => show_popup(app),

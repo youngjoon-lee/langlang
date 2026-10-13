@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="100" y1="100" x2="924" y2="924" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5AB0FF"/>
+      <stop offset="1" stop-color="#2E5BEA"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0B2A6B" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- macOS icon grid: 824px rounded square centered on a 1024 canvas -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+
+  <!-- Back bubble: English (380x300 at 196,206; tail bottom-left) -->
+  <g filter="url(#shadow)">
+    <path d="M281 206 H491 a85 85 0 0 1 85 85 V421 a85 85 0 0 1 -85 85 H330 L240 572 L254 498 a85 85 0 0 1 -58 -77 V291 a85 85 0 0 1 85 -85 Z" fill="#FFFFFF"/>
+  </g>
+  <text x="386" y="356" font-family="SF Pro Rounded" font-weight="900" font-size="230" fill="#2F6BEB" text-anchor="middle" dominant-baseline="central">A</text>
+
+  <!-- Front bubble: Korean (380x300 at 448,452; tail bottom-right) -->
+  <g filter="url(#shadow)">
+    <path d="M533 452 H743 a85 85 0 0 1 85 85 V667 a85 85 0 0 1 -58 77 L784 818 L694 752 H533 a85 85 0 0 1 -85 -85 V537 a85 85 0 0 1 85 -85 Z" fill="#14213D" stroke="url(#bg)" stroke-width="20" paint-order="stroke"/>
+  </g>
+  <text x="638" y="598" font-family="Apple SD Gothic Neo" font-weight="900" font-size="210" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" text-anchor="middle" dominant-baseline="central">가</text>
+</svg>
