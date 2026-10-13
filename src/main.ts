@@ -1,7 +1,9 @@
+import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { Translator, detectTarget, describeError, type Lang } from "./translate";
 
 const DEFAULT_SHORTCUT = "CommandOrControl+Shift+X";
@@ -266,6 +268,12 @@ listen("popup-shown", async () => {
 
 listen("open-settings", openSettings);
 
+// Open in the default browser rather than navigating the popup's webview.
+$<HTMLAnchorElement>("github-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  openUrl((e.currentTarget as HTMLAnchorElement).href);
+});
+
 // ---------- startup ----------
 
 (async () => {
@@ -283,5 +291,6 @@ listen("open-settings", openSettings);
     });
   }
   updateHints();
+  $("app-version").textContent = `v${await getVersion()}`;
   if (!savedKey) openSettings();
 })();

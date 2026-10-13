@@ -272,6 +272,20 @@ kbd {
 .actions {
   margin-top: auto;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 8px;
+}
+
+.about {
+  margin-right: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.about a {
+  color: inherit;
+}
+
+.about a:hover {
+  color: var(--text);
 }

@@ -23,6 +23,7 @@ tauri = { version = "2", features = ["tray-icon", "macos-private-api"] }
 tauri-plugin-store = "2.5.0"
 tauri-plugin-single-instance = "2.5.3"
 tauri-plugin-clipboard-manager = "2.4.2"
+tauri-plugin-opener = "2.7.1"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
