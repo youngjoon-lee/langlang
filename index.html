@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>langlang</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <main class="panel">
+      <header class="bar" data-tauri-drag-region>
+        <span class="brand" data-tauri-drag-region>langlang</span>
+        <span id="direction" class="direction" data-tauri-drag-region>EN ⇄ 한</span>
+        <span class="spacer" data-tauri-drag-region></span>
+        <button id="settings-btn" class="icon-btn" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </header>
+
+      <section id="translate-view" class="view">
+        <div class="source-wrap">
+          <textarea
+            id="source"
+            spellcheck="false"
+            placeholder="Paste text to translate — Korean → English, anything else → Korean"
+          ></textarea>
+          <button id="paste-btn" class="paste-btn" title="Paste from clipboard and translate">Paste</button>
+        </div>
+
+        <div class="result-wrap">
+          <div id="result" class="result" aria-live="polite"></div>
+          <button id="copy-btn" class="copy-btn" hidden>Copy</button>
+        </div>
+
+        <footer class="hints">
+          <span><kbd>↵</kbd> translate</span>
+          <span><kbd>⇧↵</kbd> new line</span>
+          <span><kbd class="mod">⌘</kbd><kbd>↵</kbd> copy &amp; close</span>
+          <span><kbd>esc</kbd> close</span>
+        </footer>
+      </section>
+
+      <section id="settings-view" class="view settings" hidden>
+        <label class="field">
+          <span>Gemini API key</span>
+          <input id="api-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+          <small>Stored locally on this computer. Get a free one at aistudio.google.com/apikey.</small>
+        </label>
+
+        <label class="field">
+          <span>Global shortcut</span>
+          <input id="shortcut" type="text" readonly placeholder="Click, then press a key combination" />
+          <small id="shortcut-msg">Click the box and press the keys you want to use.</small>
+        </label>
+
+        <label class="check">
+          <input id="auto-paste" type="checkbox" />
+          <span>Paste the clipboard automatically when the popup opens</span>
+        </label>
+
+        <div class="actions">
+          <button id="settings-cancel" class="btn">Cancel</button>
+          <button id="settings-save" class="btn primary">Save</button>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
