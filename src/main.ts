@@ -259,7 +259,13 @@ window.addEventListener("keydown", (e) => {
 });
 
 listen("popup-shown", async () => {
-  if (!settingsView.hidden) return;
+  // Opening the popup always lands on the translate view (unsaved settings edits
+  // are dropped), except on first run when there's no API key to translate with.
+  // The tray's "Settings…" item re-opens settings right after this event.
+  if (!settingsView.hidden) {
+    if (!translator.ready) return;
+    closeSettings();
+  }
   source.focus();
   if (autoPaste) {
     const clip = (await readText().catch(() => "")).trim();
