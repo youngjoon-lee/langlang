@@ -2,7 +2,8 @@
 name = "langlang"
 version = "0.1.0"
 description = "Popup Korean <-> English translator"
-authors = ["you"]
+authors = ["Youngjoon Lee"]
+license = "MIT"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
