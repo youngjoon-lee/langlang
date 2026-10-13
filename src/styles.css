@@ -260,6 +260,10 @@ kbd {
   font-size: 11px;
 }
 
+.field small a {
+  color: var(--accent);
+}
+
 .field small.error {
   color: var(--error);
 }

@@ -11,7 +11,10 @@
     "clipboard-manager:allow-read-text",
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "https://github.com/youngjoon-lee/langlang*" }]
+      "allow": [
+        { "url": "https://github.com/youngjoon-lee/langlang*" },
+        { "url": "https://aistudio.google.com/*" }
+      ]
     }
   ]
 }

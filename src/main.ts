@@ -276,10 +276,12 @@ listen("popup-shown", async () => {
 
 listen("open-settings", openSettings);
 
-// Open in the default browser rather than navigating the popup's webview.
-$<HTMLAnchorElement>("github-link").addEventListener("click", (e) => {
+// Open web links in the default browser rather than navigating the popup's webview.
+document.addEventListener("click", (e) => {
+  const link = (e.target as Element).closest<HTMLAnchorElement>("a[href^='https://']");
+  if (!link) return;
   e.preventDefault();
-  openUrl((e.currentTarget as HTMLAnchorElement).href);
+  openUrl(link.href);
 });
 
 // ---------- startup ----------
