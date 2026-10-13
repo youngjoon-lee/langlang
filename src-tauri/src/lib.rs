@@ -1,9 +1,9 @@
 use std::sync::Mutex;
 
 use tauri::{
+    AppHandle, Emitter, Manager, WebviewWindow, WindowEvent,
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Emitter, Manager, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -48,13 +48,11 @@ fn set_shortcut(app: AppHandle, accelerator: String) -> Result<(), String> {
     let mut current = state.0.lock().unwrap();
     let gs = app.global_shortcut();
 
-    if let Some(old) = current.as_deref() {
-        if let Ok(old) = old.parse::<Shortcut>() {
-            if old == new {
-                return Ok(());
-            }
-            let _ = gs.unregister(old);
+    if let Some(old) = current.as_deref().and_then(|s| s.parse::<Shortcut>().ok()) {
+        if old == new {
+            return Ok(());
         }
+        let _ = gs.unregister(old);
     }
 
     if let Err(e) = gs.register(new) {
