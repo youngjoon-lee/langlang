@@ -59,17 +59,31 @@ jobs:
       - name: pnpm install
         run: pnpm install --frozen-lockfile
 
+      # The .p8 API key has to live on disk for `tauri build` to read it;
+      # write the secret's contents to a temp file and expose its path
+      # via $GITHUB_ENV so the next step picks it up as APPLE_API_KEY_PATH.
+      - name: Stage Apple API key
+        if: matrix.platform == 'macos-latest'
+        run: |
+          mkdir -p "$RUNNER_TEMP/apple"
+          printf '%s' "${{ secrets.APPLE_API_KEY_CONTENT }}" > "$RUNNER_TEMP/apple/AuthKey.p8"
+          echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/apple/AuthKey.p8" >> "$GITHUB_ENV"
+
       # tauri-action runs `tauri build`, uploads installers to a draft
       # release matching the tag, and creates the release if it doesn't
       # exist. Publish the draft manually after smoke-testing the binaries.
-      #
-      # macOS builds are not signed or notarized yet, so Gatekeeper will
-      # block the first launch. To sign, add the APPLE_CERTIFICATE,
-      # APPLE_CERTIFICATE_PASSWORD, APPLE_API_ISSUER, APPLE_API_KEY and
-      # APPLE_API_KEY_CONTENT secrets and copy the signing setup from beam.
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # CI has no keychain, so the Developer ID cert is shipped in
+          # as a base64-encoded .p12 secret; tauri-action imports it
+          # into a temp keychain before signing.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # Notarization via App Store Connect API key.
+          # APPLE_API_KEY_PATH is set by the "Stage Apple API key" step.
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "langlang ${{ github.ref_name }}"
