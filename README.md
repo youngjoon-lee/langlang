@@ -19,11 +19,11 @@ Built with [Tauri 2](https://tauri.app) and translates with Gemini 3.1 Flash-Lit
 | Translate | paste (auto), or `Enter` |
 | New line in input | `Shift+Enter` |
 | Copy translation & close | `⌘Enter` / `Ctrl+Enter` |
-| Close | `Esc`, or click anywhere else |
+| Close | `Esc`, the ✕ button, or the shortcut again |
 
 The app lives in the menu bar / system tray (no Dock icon on macOS). Use the tray menu for **Settings…** and **Quit**.
 
-On first launch, the settings screen asks for your free [Gemini API key](https://aistudio.google.com/apikey). It's stored locally in the app's data directory (`settings.json`). In Settings you can also change the shortcut and turn on **auto-paste**, which fills in and translates the clipboard as soon as the popup opens.
+On first launch, the settings screen asks for your free [Gemini API key](https://aistudio.google.com/apikey). It's stored locally in the app's data directory (`settings.json`). In Settings you can also change the shortcut and turn on **auto-paste**, which fills in and translates the clipboard as soon as the popup opens, and **auto-close**, which hides the popup when you click another window (by default it stays on top until you close it).
 
 ## Development
 

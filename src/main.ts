@@ -23,9 +23,11 @@ const apiKeyInput = $<HTMLInputElement>("api-key");
 const shortcutInput = $<HTMLInputElement>("shortcut");
 const shortcutMsg = $<HTMLElement>("shortcut-msg");
 const autoPasteInput = $<HTMLInputElement>("auto-paste");
+const autoCloseInput = $<HTMLInputElement>("auto-close");
 
 let shortcut = DEFAULT_SHORTCUT;
 let autoPaste = false;
+let autoClose = false;
 let pendingShortcut = DEFAULT_SHORTCUT;
 let lastTranslated = "";
 
@@ -162,6 +164,8 @@ source.addEventListener("keydown", async (e) => {
 
 copyBtn.addEventListener("click", copyResult);
 
+$("close-btn").addEventListener("click", () => invoke("hide_popup"));
+
 $("paste-btn").addEventListener("click", async () => {
   const clip = (await readText().catch(() => "")).trim();
   source.focus();
@@ -184,6 +188,7 @@ function openSettings() {
   shortcutMsg.textContent = "Click the box and press the keys you want to use.";
   shortcutMsg.classList.remove("error");
   autoPasteInput.checked = autoPaste;
+  autoCloseInput.checked = autoClose;
   translateView.hidden = true;
   settingsView.hidden = false;
   apiKeyInput.focus();
@@ -224,6 +229,8 @@ $("settings-save").addEventListener("click", async () => {
   }
   shortcut = pendingShortcut;
   autoPaste = autoPasteInput.checked;
+  autoClose = autoCloseInput.checked;
+  await invoke("set_auto_close", { enabled: autoClose });
   const key = apiKeyInput.value.trim();
   translator.setApiKey(key);
   apiKeyInput.dataset.saved = key;
@@ -231,6 +238,7 @@ $("settings-save").addEventListener("click", async () => {
   await store.set("geminiApiKey", key);
   await store.set("shortcut", shortcut);
   await store.set("autoPaste", autoPaste);
+  await store.set("autoClose", autoClose);
   await store.save();
   updateHints();
   closeSettings();
@@ -280,6 +288,8 @@ $<HTMLAnchorElement>("github-link").addEventListener("click", (e) => {
   const savedKey = (await store.get<string>("geminiApiKey")) ?? "";
   shortcut = (await store.get<string>("shortcut")) ?? DEFAULT_SHORTCUT;
   autoPaste = (await store.get<boolean>("autoPaste")) ?? false;
+  autoClose = (await store.get<boolean>("autoClose")) ?? false;
+  await invoke("set_auto_close", { enabled: autoClose });
 
   translator.setApiKey(savedKey);
   apiKeyInput.dataset.saved = savedKey;

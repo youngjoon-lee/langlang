@@ -1,4 +1,7 @@
-use std::sync::Mutex;
+use std::sync::{
+    Mutex,
+    atomic::{AtomicBool, Ordering},
+};
 
 #[cfg(target_os = "macos")]
 use tauri::image::Image;
@@ -14,13 +17,17 @@ pub const DEFAULT_SHORTCUT: &str = "CommandOrControl+Shift+X";
 /// The accelerator string currently registered as the global shortcut.
 struct CurrentShortcut(Mutex<Option<String>>);
 
+/// Whether the popup hides itself when another window takes focus (off by default).
+struct AutoClose(AtomicBool);
+
 fn main_window(app: &AppHandle) -> Option<WebviewWindow> {
     app.get_webview_window("main")
 }
 
 fn show_popup(app: &AppHandle) {
     if let Some(win) = main_window(app) {
-        let _ = win.center();
+        // No re-centering: the popup reopens wherever the user last dragged it
+        // (it starts centered via `center` in tauri.conf.json).
         let _ = win.show();
         let _ = win.unminimize();
         let _ = win.set_focus();
@@ -70,6 +77,11 @@ fn set_shortcut(app: AppHandle, accelerator: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn set_auto_close(app: AppHandle, enabled: bool) {
+    app.state::<AutoClose>().0.store(enabled, Ordering::Relaxed);
+}
+
+#[tauri::command]
 fn hide_popup(app: AppHandle) {
     if let Some(win) = main_window(&app) {
         let _ = win.hide();
@@ -95,7 +107,12 @@ pub fn run() {
                 .build(),
         )
         .manage(CurrentShortcut(Mutex::new(None)))
-        .invoke_handler(tauri::generate_handler![set_shortcut, hide_popup])
+        .manage(AutoClose(AtomicBool::new(false)))
+        .invoke_handler(tauri::generate_handler![
+            set_shortcut,
+            set_auto_close,
+            hide_popup
+        ])
         .setup(|app| {
             // Menu-bar-only app on macOS: no Dock icon, no app switcher entry.
             #[cfg(target_os = "macos")]
@@ -135,9 +152,12 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| match event {
-            // Behave like a popup: dismiss when the user clicks elsewhere.
+            // By default the popup stays on top until dismissed with Esc, the close
+            // button, or the shortcut; with auto-close on, clicking elsewhere hides it.
             WindowEvent::Focused(false) => {
-                let _ = window.hide();
+                if window.state::<AutoClose>().0.load(Ordering::Relaxed) {
+                    let _ = window.hide();
+                }
             }
             // Closing the window just hides it; quit from the tray menu.
             WindowEvent::CloseRequested { api, .. } => {
