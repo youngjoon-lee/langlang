@@ -84,6 +84,10 @@ jobs:
           # APPLE_API_KEY_PATH is set by the "Stage Apple API key" step.
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          # Signs the updater bundles; tauri-action then attaches latest.json,
+          # which installed apps poll (via releases/latest) to find updates.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "langlang ${{ github.ref_name }}"

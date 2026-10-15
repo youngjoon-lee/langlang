@@ -9,6 +9,8 @@
     "store:default",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
+    "updater:default",
+    "process:allow-restart",
     {
       "identifier": "opener:allow-open-url",
       "allow": [

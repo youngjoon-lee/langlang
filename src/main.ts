@@ -4,9 +4,12 @@ import { listen } from "@tauri-apps/api/event";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { check, type Update } from "@tauri-apps/plugin-updater";
 import { Translator, detectTarget, describeError, type Lang } from "./translate";
 
 const DEFAULT_SHORTCUT = "CommandOrControl+Shift+X";
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const IS_MAC = navigator.userAgent.includes("Mac");
 
 const store = new LazyStore("settings.json");
@@ -24,12 +27,15 @@ const shortcutInput = $<HTMLInputElement>("shortcut");
 const shortcutMsg = $<HTMLElement>("shortcut-msg");
 const autoPasteInput = $<HTMLInputElement>("auto-paste");
 const autoCloseInput = $<HTMLInputElement>("auto-close");
+const updateBtn = $<HTMLButtonElement>("update-btn");
 
 let shortcut = DEFAULT_SHORTCUT;
 let autoPaste = false;
 let autoClose = false;
 let pendingShortcut = DEFAULT_SHORTCUT;
 let lastTranslated = "";
+let update: Update | null = null;
+let lastUpdateCheck = 0;
 
 // ---------- shortcut formatting ----------
 
@@ -244,6 +250,45 @@ $("settings-save").addEventListener("click", async () => {
   closeSettings();
 });
 
+// ---------- updates ----------
+
+/** Look for a newer release (at most every few hours) and reveal the Update button if there is one. */
+async function checkForUpdate() {
+  if (update || Date.now() - lastUpdateCheck < UPDATE_CHECK_INTERVAL_MS) return;
+  lastUpdateCheck = Date.now();
+  try {
+    update = await check();
+  } catch (err) {
+    // Offline, or no release with update info yet: try again later, quietly.
+    console.error(err);
+    return;
+  }
+  if (update) {
+    updateBtn.title = updateTitle();
+    updateBtn.hidden = false;
+  }
+}
+
+const updateTitle = () => `Update to v${update?.version} and restart`;
+
+updateBtn.addEventListener("click", async () => {
+  if (!update) return;
+  updateBtn.disabled = true;
+  updateBtn.textContent = "Updating…";
+  updateBtn.title = updateTitle();
+  updateBtn.classList.remove("failed");
+  try {
+    await update.downloadAndInstall();
+    await relaunch();
+  } catch (err) {
+    console.error(err);
+    updateBtn.disabled = false;
+    updateBtn.textContent = "Update failed · Retry";
+    updateBtn.title = `Update failed: ${err}`;
+    updateBtn.classList.add("failed");
+  }
+});
+
 // ---------- window behaviour ----------
 
 function updateHints() {
@@ -259,6 +304,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 listen("popup-shown", async () => {
+  checkForUpdate();
   // Opening the popup always lands on the translate view (unsaved settings edits
   // are dropped), except on first run when there's no API key to translate with.
   // The tray's "Settings…" item re-opens settings right after this event.
@@ -311,4 +357,5 @@ document.addEventListener("click", (e) => {
   updateHints();
   $("app-version").textContent = `v${await getVersion()}`;
   if (!savedKey) openSettings();
+  checkForUpdate();
 })();
