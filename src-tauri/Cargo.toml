@@ -1,6 +1,6 @@
 [package]
 name = "langlang"
-version = "0.1.3"
+version = "0.1.4"
 description = "Popup Korean <-> English translator"
 authors = ["Youngjoon Lee"]
 license = "MIT"
