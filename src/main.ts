@@ -2,6 +2,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { LazyStore } from "@tauri-apps/plugin-store";
+import { disable as disableAutostart, enable as enableAutostart, isEnabled as autostartEnabled } from "@tauri-apps/plugin-autostart";
 import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -27,6 +28,8 @@ const shortcutInput = $<HTMLInputElement>("shortcut");
 const shortcutMsg = $<HTMLElement>("shortcut-msg");
 const autoPasteInput = $<HTMLInputElement>("auto-paste");
 const autoCloseInput = $<HTMLInputElement>("auto-close");
+const autostartInput = $<HTMLInputElement>("autostart");
+const autostartMsg = $<HTMLElement>("autostart-msg");
 const updateBtn = $<HTMLButtonElement>("update-btn");
 
 let shortcut = DEFAULT_SHORTCUT;
@@ -195,6 +198,9 @@ function openSettings() {
   shortcutMsg.classList.remove("error");
   autoPasteInput.checked = autoPaste;
   autoCloseInput.checked = autoClose;
+  autostartMsg.hidden = true;
+  // The OS login item is the source of truth (the user may remove it in system settings).
+  autostartEnabled().then((on) => (autostartInput.checked = on)).catch(console.error);
   translateView.hidden = true;
   settingsView.hidden = false;
   apiKeyInput.focus();
@@ -247,6 +253,15 @@ $("settings-save").addEventListener("click", async () => {
   await store.set("autoClose", autoClose);
   await store.save();
   updateHints();
+  try {
+    if (autostartInput.checked !== (await autostartEnabled())) {
+      await (autostartInput.checked ? enableAutostart() : disableAutostart());
+    }
+  } catch (err) {
+    autostartMsg.textContent = `Could not change this: ${err}`;
+    autostartMsg.hidden = false;
+    return;
+  }
   closeSettings();
 });
 

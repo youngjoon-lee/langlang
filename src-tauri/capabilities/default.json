@@ -11,6 +11,7 @@
     "clipboard-manager:allow-read-text",
     "updater:default",
     "process:allow-restart",
+    "autostart:default",
     {
       "identifier": "opener:allow-open-url",
       "allow": [
