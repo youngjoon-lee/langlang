@@ -7,6 +7,7 @@ import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
+import { GOOGLE_NAME, GoogleTranslator } from "./google";
 import { ONDEVICE_MODEL, OnDeviceTranslator } from "./ondevice";
 import { GEMINI_MODEL, GeminiTranslator, detectTarget, describeError, type Lang } from "./translate";
 
@@ -15,12 +16,17 @@ const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const IS_MAC = navigator.userAgent.includes("Mac");
 
 const store = new LazyStore("settings.json");
-const gemini = new GeminiTranslator();
-const ondevice = new OnDeviceTranslator();
+const translators = {
+  google: new GoogleTranslator(),
+  ondevice: new OnDeviceTranslator(),
+  gemini: new GeminiTranslator(),
+};
+const { ondevice, gemini } = translators;
 
-type Engine = "ondevice" | "gemini";
-let engine: Engine = "ondevice";
-const translator = () => (engine === "gemini" ? gemini : ondevice);
+type Engine = keyof typeof translators;
+const DEFAULT_ENGINE: Engine = "google";
+let engine: Engine = DEFAULT_ENGINE;
+const translator = () => translators[engine];
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const source = $<HTMLTextAreaElement>("source");
@@ -211,12 +217,16 @@ $("paste-btn").addEventListener("click", async () => {
 // ---------- settings view ----------
 
 // Only the selected translator's settings are shown: the API key is Gemini-only.
+const ENGINE_HINTS: Record<Engine, string> = {
+  google: "Free, no API key. Not an official API.",
+  ondevice: "Free, no API key. Downloads about 140 MB the first time; text never leaves your computer.",
+  gemini: "Sends the text to Google's Gemini API with your own API key.",
+};
+
 function showEngineFields() {
-  const gem = engineInput.value === "gemini";
-  apiKeyField.hidden = !gem;
-  engineHint.textContent = gem
-    ? "Sends the text to Google's Gemini API with your own API key."
-    : "Free, no API key. Downloads about 140 MB the first time; text never leaves your computer.";
+  const selected = engineInput.value as Engine;
+  apiKeyField.hidden = selected !== "gemini";
+  engineHint.textContent = ENGINE_HINTS[selected];
 }
 
 engineInput.addEventListener("change", showEngineFields);
@@ -393,7 +403,8 @@ document.addEventListener("click", (e) => {
 
 (async () => {
   const savedKey = (await store.get<string>("geminiApiKey")) ?? "";
-  engine = (await store.get<Engine>("engine")) ?? "ondevice";
+  const savedEngine = await store.get<string>("engine");
+  engine = savedEngine && savedEngine in translators ? (savedEngine as Engine) : DEFAULT_ENGINE;
   shortcut = (await store.get<string>("shortcut")) ?? DEFAULT_SHORTCUT;
   autoPaste = (await store.get<boolean>("autoPaste")) ?? false;
   autoClose = (await store.get<boolean>("autoClose")) ?? false;
@@ -410,8 +421,11 @@ document.addEventListener("click", (e) => {
   }
   updateHints();
   $("app-version").textContent = `v${await getVersion()}`;
-  engineInput.options[0].textContent = `On-device AI: ${ONDEVICE_MODEL}`;
-  engineInput.options[1].textContent = `Gemini: ${GEMINI_MODEL}`;
+  const label = (value: Engine, text: string) =>
+    (engineInput.querySelector<HTMLOptionElement>(`option[value="${value}"]`)!.textContent = text);
+  label("google", GOOGLE_NAME);
+  label("ondevice", `On-device AI: ${ONDEVICE_MODEL}`);
+  label("gemini", `Gemini: ${GEMINI_MODEL}`);
   if (!translator().ready) openSettings();
   checkForUpdate();
 })();
