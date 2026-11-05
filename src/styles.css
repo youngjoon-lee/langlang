@@ -97,6 +97,27 @@ body {
   color: var(--text);
 }
 
+.check-update-btn {
+  height: 24px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.check-update-btn:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.check-update-btn:disabled {
+  cursor: default;
+}
+
 .update-btn {
   height: 24px;
   padding: 0 10px;
