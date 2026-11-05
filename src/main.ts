@@ -7,14 +7,20 @@ import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
-import { Translator, detectTarget, describeError, type Lang } from "./translate";
+import { ONDEVICE_MODEL, OnDeviceTranslator } from "./ondevice";
+import { GEMINI_MODEL, GeminiTranslator, detectTarget, describeError, type Lang } from "./translate";
 
 const DEFAULT_SHORTCUT = "CommandOrControl+Shift+X";
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const IS_MAC = navigator.userAgent.includes("Mac");
 
 const store = new LazyStore("settings.json");
-const translator = new Translator();
+const gemini = new GeminiTranslator();
+const ondevice = new OnDeviceTranslator();
+
+type Engine = "ondevice" | "gemini";
+let engine: Engine = "ondevice";
+const translator = () => (engine === "gemini" ? gemini : ondevice);
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const source = $<HTMLTextAreaElement>("source");
@@ -23,6 +29,9 @@ const direction = $<HTMLSpanElement>("direction");
 const copyBtn = $<HTMLButtonElement>("copy-btn");
 const translateView = $<HTMLElement>("translate-view");
 const settingsView = $<HTMLElement>("settings-view");
+const engineInput = $<HTMLSelectElement>("engine");
+const engineHint = $<HTMLElement>("engine-hint");
+const apiKeyField = $<HTMLElement>("api-key-field");
 const apiKeyInput = $<HTMLInputElement>("api-key");
 const shortcutInput = $<HTMLInputElement>("shortcut");
 const shortcutMsg = $<HTMLElement>("shortcut-msg");
@@ -101,7 +110,7 @@ function setDirection(text: string) {
 }
 
 function showError(message: string) {
-  result.classList.remove("streaming");
+  result.classList.remove("streaming", "status");
   result.classList.add("error");
   result.textContent = message;
   copyBtn.hidden = true;
@@ -110,7 +119,7 @@ function showError(message: string) {
 async function runTranslation() {
   const text = source.value.trim();
   if (!text) return;
-  if (!translator.ready) {
+  if (!translator().ready) {
     openSettings();
     shortcutMsg.textContent = "Add your API key to start translating.";
     return;
@@ -126,13 +135,24 @@ async function runTranslation() {
   copyBtn.hidden = true;
 
   try {
-    await translator.translate(text, target as Lang, {
+    let status = false;
+    await translator().translate(text, target as Lang, {
       onText: (delta) => {
+        if (status) {
+          result.textContent = "";
+          result.classList.remove("status");
+          status = false;
+        }
         result.textContent += delta;
+      },
+      onStatus: (message) => {
+        status = true;
+        result.classList.add("status");
+        result.textContent = message;
       },
     });
     result.textContent = (result.textContent ?? "").trim();
-    result.classList.remove("streaming");
+    result.classList.remove("streaming", "status");
     copyBtn.hidden = !result.textContent;
   } catch (err) {
     const message = describeError(err);
@@ -190,7 +210,20 @@ $("paste-btn").addEventListener("click", async () => {
 
 // ---------- settings view ----------
 
+// Only the selected translator's settings are shown: the API key is Gemini-only.
+function showEngineFields() {
+  const gem = engineInput.value === "gemini";
+  apiKeyField.hidden = !gem;
+  engineHint.textContent = gem
+    ? "Sends the text to Google's Gemini API with your own API key."
+    : "Free, no API key. Downloads about 140 MB the first time; text never leaves your computer.";
+}
+
+engineInput.addEventListener("change", showEngineFields);
+
 function openSettings() {
+  engineInput.value = engine;
+  showEngineFields();
   apiKeyInput.value = apiKeyInput.dataset.saved ?? "";
   pendingShortcut = shortcut;
   shortcutInput.value = prettyShortcut(shortcut);
@@ -203,7 +236,7 @@ function openSettings() {
   autostartEnabled().then((on) => (autostartInput.checked = on)).catch(console.error);
   translateView.hidden = true;
   settingsView.hidden = false;
-  apiKeyInput.focus();
+  (apiKeyField.hidden ? engineInput : apiKeyInput).focus();
 }
 
 function closeSettings() {
@@ -244,9 +277,14 @@ $("settings-save").addEventListener("click", async () => {
   autoClose = autoCloseInput.checked;
   await invoke("set_auto_close", { enabled: autoClose });
   const key = apiKeyInput.value.trim();
-  translator.setApiKey(key);
+  gemini.setApiKey(key);
   apiKeyInput.dataset.saved = key;
+  engine = engineInput.value as Engine;
+  if (engine !== "ondevice") ondevice.unload();
+  // Re-translate with the newly chosen translator.
+  lastTranslated = "";
 
+  await store.set("engine", engine);
   await store.set("geminiApiKey", key);
   await store.set("shortcut", shortcut);
   await store.set("autoPaste", autoPaste);
@@ -321,10 +359,10 @@ window.addEventListener("keydown", (e) => {
 listen("popup-shown", async () => {
   checkForUpdate();
   // Opening the popup always lands on the translate view (unsaved settings edits
-  // are dropped), except on first run when there's no API key to translate with.
+  // are dropped), except when Gemini is chosen but has no API key to translate with.
   // The tray's "Settings…" item re-opens settings right after this event.
   if (!settingsView.hidden) {
-    if (!translator.ready) return;
+    if (!translator().ready) return;
     closeSettings();
   }
   source.focus();
@@ -355,12 +393,13 @@ document.addEventListener("click", (e) => {
 
 (async () => {
   const savedKey = (await store.get<string>("geminiApiKey")) ?? "";
+  engine = (await store.get<Engine>("engine")) ?? "ondevice";
   shortcut = (await store.get<string>("shortcut")) ?? DEFAULT_SHORTCUT;
   autoPaste = (await store.get<boolean>("autoPaste")) ?? false;
   autoClose = (await store.get<boolean>("autoClose")) ?? false;
   await invoke("set_auto_close", { enabled: autoClose });
 
-  translator.setApiKey(savedKey);
+  gemini.setApiKey(savedKey);
   apiKeyInput.dataset.saved = savedKey;
 
   if (shortcut !== DEFAULT_SHORTCUT) {
@@ -371,6 +410,8 @@ document.addEventListener("click", (e) => {
   }
   updateHints();
   $("app-version").textContent = `v${await getVersion()}`;
-  if (!savedKey) openSettings();
+  engineInput.options[0].textContent = `On-device AI: ${ONDEVICE_MODEL}`;
+  engineInput.options[1].textContent = `Gemini: ${GEMINI_MODEL}`;
+  if (!translator().ready) openSettings();
   checkForUpdate();
 })();

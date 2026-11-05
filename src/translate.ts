@@ -1,7 +1,7 @@
 import { ApiError, FinishReason, GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 // Flash-Lite is free on the Gemini API free tier and has the most generous free quota.
-const MODEL = "gemini-3.1-flash-lite";
+export const GEMINI_MODEL = "gemini-3.1-flash-lite";
 
 export type Lang = "ko" | "en";
 
@@ -35,11 +35,20 @@ The user pastes text they copied from somewhere (a web page, chat, email, code c
 
 export interface TranslateHandlers {
   onText: (delta: string) => void;
+  /** Progress messages shown before any text arrives (e.g. a model download). */
+  onStatus?: (message: string) => void;
 }
 
-class AbortedError extends Error {}
+/** A translation that was cancelled (superseded by a newer one); never shown to the user. */
+export class AbortedError extends Error {}
 
-export class Translator {
+export interface Translator {
+  readonly ready: boolean;
+  cancel(): void;
+  translate(text: string, target: Lang, handlers: TranslateHandlers): Promise<void>;
+}
+
+export class GeminiTranslator implements Translator {
   private client: GoogleGenAI | null = null;
   private apiKey = "";
   private current: AbortController | null = null;
@@ -69,7 +78,7 @@ export class Translator {
 
     try {
       const stream = await this.client.models.generateContentStream({
-        model: MODEL,
+        model: GEMINI_MODEL,
         contents: `Translate into ${LANG_NAME[target]}:\n\n<text>\n${text}\n</text>`,
         config: {
           systemInstruction: SYSTEM_PROMPT,

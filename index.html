@@ -48,6 +48,15 @@
 
       <section id="settings-view" class="view settings" hidden>
         <label class="field">
+          <span>Translator</span>
+          <select id="engine">
+            <option value="ondevice">On-device AI</option>
+            <option value="gemini">Gemini</option>
+          </select>
+          <small id="engine-hint"></small>
+        </label>
+
+        <label class="field" id="api-key-field">
           <span>Gemini API key</span>
           <input id="api-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" />
           <small>
