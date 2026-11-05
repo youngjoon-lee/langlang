@@ -2170,7 +2170,11 @@ dependencies = [
 name = "langlang"
 version = "0.1.4"
 dependencies = [
+ "reqwest",
+ "rustls",
+ "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",

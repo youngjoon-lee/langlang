@@ -1,3 +1,5 @@
+mod ondevice;
+
 use std::sync::{
     Mutex,
     atomic::{AtomicBool, Ordering},
@@ -114,7 +116,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             set_shortcut,
             set_auto_close,
-            hide_popup
+            hide_popup,
+            ondevice::ondevice_download,
+            ondevice::ondevice_ready,
+            ondevice::ondevice_file
         ])
         .setup(|app| {
             // Menu-bar-only app on macOS: no Dock icon, no app switcher entry.

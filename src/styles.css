@@ -137,6 +137,7 @@ body {
 }
 
 textarea,
+select,
 input[type="text"],
 input[type="password"] {
   font: inherit;
@@ -148,6 +149,7 @@ input[type="password"] {
 }
 
 textarea:focus,
+select:focus,
 input:focus {
   border-color: color-mix(in srgb, var(--accent) 60%, transparent);
 }
@@ -198,6 +200,10 @@ input:focus {
 
 .result.streaming:empty::before {
   content: "Translating…";
+}
+
+.result.status {
+  color: var(--muted);
 }
 
 .result.streaming::after {
@@ -275,8 +281,13 @@ kbd {
   font-size: 13px;
 }
 
-.field input {
+.field input,
+.field select {
   padding: 8px 10px;
+}
+
+.field[hidden] {
+  display: none;
 }
 
 #shortcut {
