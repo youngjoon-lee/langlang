@@ -9,12 +9,11 @@ A tiny popup translator for macOS, Windows, and Linux. Press a global shortcut, 
 - **Korean text → English**
 - **Anything else → Korean**
 
-Built with [Tauri 2](https://tauri.app). Choose one of three translators in Settings:
+Built with [Tauri 2](https://tauri.app). Choose one of two translators in Settings:
 
 | Translator | API key | Notes |
 | --- | --- | --- |
-| **Google Translate** (default) | Not needed | Uses the keyless endpoint Google Translate's web clients use. It isn't an official API, so Google may occasionally block requests for a while. |
-| **On-device AI** ([Bergamot](https://github.com/mozilla/translations) by Mozilla) | Not needed | Runs on your computer with the models Firefox Translations uses. Korean ↔ English only. Downloads about 70 MB per direction on first use, and the text never leaves your computer. |
+| **On-device AI** ([Bergamot](https://github.com/mozilla/translations) by Mozilla, default) | Not needed | Runs on your computer with the models Firefox Translations uses. Korean ↔ English only. Downloads about 70 MB per direction on first use, and the text never leaves your computer. |
 | **Gemini** (`gemini-3.1-flash-lite`) | Your own, [free](https://aistudio.google.com/apikey) | Sends the text to the Gemini API. |
 
 ## Usage
@@ -29,7 +28,7 @@ Built with [Tauri 2](https://tauri.app). Choose one of three translators in Sett
 
 The app lives in the menu bar / system tray (no Dock icon on macOS). Use the tray menu for **Settings…** and **Quit**.
 
-It works out of the box with Google Translate. In Settings you can switch translators (a Gemini API key is stored locally in the app's data directory, `settings.json`), change the shortcut and turn on **auto-paste**, which fills in and translates the clipboard as soon as the popup opens, and **auto-close**, which hides the popup when you click another window (by default it stays on top until you close it).
+It works out of the box with on-device AI. In Settings you can switch translators (a Gemini API key is stored locally in the app's data directory, `settings.json`), change the shortcut and turn on **auto-paste**, which fills in and translates the clipboard as soon as the popup opens, and **auto-close**, which hides the popup when you click another window (by default it stays on top until you close it).
 
 ## Development
 
@@ -53,7 +52,6 @@ Build each platform's installer on that platform (or in CI).
 - `src-tauri/src/lib.rs`: global shortcut, tray, popup window behavior
 - `src-tauri/src/ondevice.rs`: downloads and hash-checks the on-device engine and models
 - `src/translate.ts`: direction detection (Hangul vs. Latin script) and the streaming Gemini call
-- `src/google.ts`: the Google Translate call
 - `src/ondevice.ts`, `src/ondevice.worker.ts`: run the Bergamot engine in a web worker
 - `src/vendor/bergamot/`: Bergamot's wasm glue from Firefox (MPL-2.0)
 - `src/main.ts`: UI, settings, and keyboard handling

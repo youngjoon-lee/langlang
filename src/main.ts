@@ -7,7 +7,6 @@ import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
-import { GOOGLE_NAME, GoogleTranslator } from "./google";
 import { ONDEVICE_MODEL, OnDeviceTranslator } from "./ondevice";
 import { GEMINI_MODEL, GeminiTranslator, detectTarget, describeError, type Lang } from "./translate";
 
@@ -17,14 +16,13 @@ const IS_MAC = navigator.userAgent.includes("Mac");
 
 const store = new LazyStore("settings.json");
 const translators = {
-  google: new GoogleTranslator(),
   ondevice: new OnDeviceTranslator(),
   gemini: new GeminiTranslator(),
 };
 const { ondevice, gemini } = translators;
 
 type Engine = keyof typeof translators;
-const DEFAULT_ENGINE: Engine = "google";
+const DEFAULT_ENGINE: Engine = "ondevice";
 let engine: Engine = DEFAULT_ENGINE;
 const translator = () => translators[engine];
 
@@ -219,7 +217,6 @@ $("paste-btn").addEventListener("click", async () => {
 
 // Only the selected translator's settings are shown: the API key is Gemini-only.
 const ENGINE_HINTS: Record<Engine, string> = {
-  google: "Free, no API key. Not an official API.",
   ondevice: "Free, no API key. Downloads about 140 MB the first time; text never leaves your computer.",
   gemini: "Sends the text to Google's Gemini API with your own API key.",
 };
@@ -453,7 +450,6 @@ document.addEventListener("click", (e) => {
   $("app-version").textContent = `v${await getVersion()}`;
   const label = (value: Engine, text: string) =>
     (engineInput.querySelector<HTMLOptionElement>(`option[value="${value}"]`)!.textContent = text);
-  label("google", GOOGLE_NAME);
   label("ondevice", `On-device AI: ${ONDEVICE_MODEL}`);
   label("gemini", `Gemini: ${GEMINI_MODEL}`);
   if (!translator().ready) openSettings();
