@@ -46,6 +46,7 @@ const autoCloseInput = $<HTMLInputElement>("auto-close");
 const autostartInput = $<HTMLInputElement>("autostart");
 const autostartMsg = $<HTMLElement>("autostart-msg");
 const updateBtn = $<HTMLButtonElement>("update-btn");
+const checkUpdateBtn = $<HTMLButtonElement>("check-update-btn");
 
 let shortcut = DEFAULT_SHORTCUT;
 let autoPaste = false;
@@ -315,22 +316,51 @@ $("settings-save").addEventListener("click", async () => {
 
 // ---------- updates ----------
 
-/** Look for a newer release (at most every few hours) and reveal the Update button if there is one. */
-async function checkForUpdate() {
-  if (update || Date.now() - lastUpdateCheck < UPDATE_CHECK_INTERVAL_MS) return;
+/**
+ * Look for a newer release and, if there is one, swap the "Check for updates" button
+ * for the "New version available" one. Automatic checks run at most every few hours
+ * and fail quietly; a manual check (`manual`) always runs and throws on failure.
+ */
+async function checkForUpdate(manual = false) {
+  if (update || (!manual && Date.now() - lastUpdateCheck < UPDATE_CHECK_INTERVAL_MS)) return;
   lastUpdateCheck = Date.now();
   try {
     update = await check();
   } catch (err) {
-    // Offline, or no release with update info yet: try again later, quietly.
+    // Offline, or no release with update info yet: try again later.
     console.error(err);
+    if (manual) throw err;
     return;
   }
   if (update) {
     updateBtn.title = updateTitle();
     updateBtn.hidden = false;
+    checkUpdateBtn.hidden = true;
   }
 }
+
+/** Show a short result on the "Check for updates" button, then restore it. */
+function flashCheckResult(text: string, title = "") {
+  checkUpdateBtn.textContent = text;
+  checkUpdateBtn.title = title;
+  setTimeout(() => {
+    checkUpdateBtn.textContent = "Check for updates";
+    checkUpdateBtn.title = "";
+    checkUpdateBtn.disabled = false;
+  }, 2500);
+}
+
+checkUpdateBtn.addEventListener("click", async () => {
+  checkUpdateBtn.disabled = true;
+  checkUpdateBtn.textContent = "Checking…";
+  try {
+    await checkForUpdate(true);
+  } catch (err) {
+    flashCheckResult("Couldn't check", `Update check failed: ${err}`);
+    return;
+  }
+  if (!update) flashCheckResult("Up to date");
+});
 
 const updateTitle = () => `Update to v${update?.version} and restart`;
 
